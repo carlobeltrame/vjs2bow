@@ -1,0 +1,42 @@
+desc:new effect
+
+slider1:inx_channel=0<1,16,1{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input channel for X coordinate
+slider2:cc_inx=118<1,128,1>Input CC for X coordinate
+slider3:iny_channel=0<1,16,1{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Input channel for Y coordinate
+slider4:cc_iny=119<1,128,1>Input CC for Y coordinate
+slider5:out_channel=0<1,16,1{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}>Output channel
+slider6:cc_out=11<1,128,1>Output CC
+slider7:factor_out=7<1,128,1>Output multiplier
+
+in_pin:none
+out_pin:none
+
+@init
+cc = $xB0;
+last_x = 64;
+last_y = 64;
+
+@block
+new_x = last_x;
+new_y = last_y;
+new_offset = 0;
+while (midirecv(offset,msg1,msg2,msg3)) (
+  (msg2==cc_inx) ? (
+    new_x = msg3;
+    new_offset = offset;
+  );
+  (msg2==cc_iny) ? (
+    new_y = msg3;
+    new_offset = offset;
+  );
+  midisend(offset,msg1,msg2,msg3);
+);
+dx = new_x - last_x;
+dy = new_y - last_y;
+velocity = sqrt(dx^2 + dy^2);
+direction = (dx + dy) > 0 ? 1 : -1;
+out_value = 63 + max(-63, min(64, velocity * factor_out * direction));
+midisend(new_offset, cc+out_channel, cc_out, velocity);
+last_x = new_x;
+last_y = new_y;
+
