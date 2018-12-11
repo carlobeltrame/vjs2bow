@@ -15,6 +15,7 @@ out_pin:none
 cc = $xB0;
 last_x = 64;
 last_y = 64;
+last_velocity = 63;
 
 @block
 new_x = last_x;
@@ -33,10 +34,13 @@ while (midirecv(offset,msg1,msg2,msg3)) (
 );
 dx = new_x - last_x;
 dy = new_y - last_y;
+
 velocity = sqrt(dx^2 + dy^2);
-direction = (dx + dy) > 0 ? 1 : -1;
-out_value = 63 + max(-63, min(64, velocity * factor_out * direction));
-midisend(new_offset, cc+out_channel, cc_out, velocity);
+last_velocity != velocity ? (
+  direction = (dx + dy) > 0 ? 1 : -1;
+  out_value = 63 + max(-63, min(64, velocity * factor_out * direction));
+  midisend(new_offset, cc+out_channel, cc_out, velocity);
+);
 last_x = new_x;
 last_y = new_y;
-
+last_velocity = velocity;
